@@ -7,11 +7,64 @@
 
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        Text("Hello, world!")
-            .padding()
+struct ExpensesItem: Identifiable, Codable {
+    let id = UUID()
+    let name: String
+    let currency: String
+    let amount: Int
+    
+}
+
+class Expenses: ObservableObject {
+    @Published var items = [ExpensesItem]() {
+        didSet {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(items) {
+                UserDefaults.standard.set(encoder, forKey: "Items")
+            }
+        }
     }
+    init() {
+        if let items = UserDefaults.standard.data(forKey: "Items") {
+            let decoder = JSONDecoder()
+            if let decoded = try? decoder.decode([ExpensesItem].self, from: items) {
+                self.items = decoded
+                return
+            }
+        }
+    }
+}
+
+struct ContentView: View {
+    
+    @State private var shoingAddExpense = false
+    @ObservedObject var expenses = Expenses()
+    
+    var body: some View {
+        NavigationView {
+            Form{
+                ForEach(expenses.items) { item in
+                    Text(item.name)
+                }.onDelete(perform: removeItems)
+            }
+            .navigationTitle("My expenses")
+            .navigationBarItems(trailing:
+                                    Button(action: {
+                                        shoingAddExpense = true
+                                    }, label: {
+                                        Image(systemName: "plus")
+                                    })
+            ).sheet(isPresented: $shoingAddExpense, content: {
+                AddView(expenses: Expenses())
+            })
+        }
+    }
+    
+    func removeItems(as offsetes: IndexSet) {
+        expenses.items.remove(atOffsets: offsetes)
+    }
+    
+    
 }
 
 struct ContentView_Previews: PreviewProvider {

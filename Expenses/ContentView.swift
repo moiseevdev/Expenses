@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ExpensesItem: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     let name: String
     let currency: String
     let amount: Int
@@ -20,7 +20,7 @@ class Expenses: ObservableObject {
         didSet {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(items) {
-                UserDefaults.standard.set(encoder, forKey: "Items")
+                UserDefaults.standard.set(encoded, forKey: "Items")
             }
         }
     }
@@ -37,7 +37,7 @@ class Expenses: ObservableObject {
 
 struct ContentView: View {
     
-    @State private var shoingAddExpense = false
+    @State private var showingAddExpense = false
     @ObservedObject var expenses = Expenses()
     
     var body: some View {
@@ -50,11 +50,11 @@ struct ContentView: View {
             .navigationTitle("My expenses")
             .navigationBarItems(trailing:
                                     Button(action: {
-                                        shoingAddExpense = true
+                                        showingAddExpense = true
                                     }, label: {
                                         Image(systemName: "plus")
                                     })
-            ).sheet(isPresented: $shoingAddExpense, content: {
+            ).sheet(isPresented: $showingAddExpense, content: {
                 AddView(expenses: Expenses())
             })
         }
